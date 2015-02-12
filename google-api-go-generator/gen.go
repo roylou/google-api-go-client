@@ -45,14 +45,15 @@ var (
 // API represents an API to generate, as well as its state while it's
 // generating.
 type API struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	Version       string `json:"version"`
-	Title         string `json:"title"`
-	DiscoveryLink string `json:"discoveryLink"` // relative
-	RootURL       string `json:"rootUrl"`
-	ServicePath   string `json:"servicePath"`
-	Preferred     bool   `json:"preferred"`
+	Headers       map[string]string `json:"headers"`
+	ID            string            `json:"id"`
+	Name          string            `json:"name"`
+	Version       string            `json:"version"`
+	Title         string            `json:"title"`
+	DiscoveryLink string            `json:"discoveryLink"` // relative
+	RootURL       string            `json:"rootUrl"`
+	ServicePath   string            `json:"servicePath"`
+	Preferred     bool              `json:"preferred"`
 
 	m map[string]interface{}
 
@@ -1310,6 +1311,9 @@ func (meth *Method) generateCode() {
 	}
 	if hasContentType {
 		pn(`req.Header.Set("Content-Type", ctype)`)
+	}
+	for k, v := range a.Headers {
+		pn(`req.Header.Set("` + k + `", "` + v + `")`)
 	}
 	pn(`req.Header.Set("User-Agent", "google-api-go-client/` + goGenVersion + `")`)
 	pn("res, err := c.s.client.Do(req);")
