@@ -596,6 +596,14 @@ func (t *Type) isIntAsString() bool {
 	return t.apiType() == "string" && strings.Contains(t.apiTypeFormat(), "int")
 }
 
+func (t *Type) isFloatAsString() bool {
+	return t.apiType() == "string" && strings.Contains(t.apiTypeFormat(), "float")
+}
+
+func (t *Type) isBoolAsString() bool {
+	return t.apiType() == "string" && strings.Contains(t.apiTypeFormat(), "boolean")
+}
+
 func (t *Type) asSimpleGoType() (goType string, ok bool) {
 	return simpleTypeConvert(t.apiType(), t.apiTypeFormat())
 }
@@ -971,6 +979,9 @@ func (s *Schema) writeSchemaStruct(api *API) {
 		}
 		var extraOpt string
 		if p.Type().isIntAsString() {
+			extraOpt += ",string"
+		}
+		if p.Type().isFloatAsString() || p.Type().isBoolAsString() {
 			extraOpt += ",string"
 		}
 		s.api.p("\t%s %s `json:\"%s,omitempty%s\"`\n", pname, p.Type().AsGo(), p.APIName(), extraOpt)
@@ -1582,6 +1593,10 @@ func simpleTypeConvert(apiType, format string) (gotype string, ok bool) {
 		switch format {
 		case "int64", "uint64", "int32", "uint32":
 			gotype = format
+		case "float":
+			gotype = "float64"
+		case "boolean":
+			gotype = "bool"
 		}
 	case "number":
 		gotype = "float64"
