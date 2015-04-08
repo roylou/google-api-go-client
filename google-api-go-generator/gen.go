@@ -37,9 +37,10 @@ var (
 
 	publicOnly = flag.Bool("publiconly", true, "Only build public, released APIs. Only applicable for Google employees.")
 
-	jsonFile     = flag.String("api_json_file", "", "If non-empty, the path to a local file on disk containing the API to generate. Exclusive with setting --api.")
-	output       = flag.String("output", "", "(optional) Path to source output file. If not specified, the API name and version are used to construct an output path (e.g. tasks/v1).")
-	googleAPIPkg = flag.String("googleapi_pkg", "google.golang.org/api/googleapi", "Go package path of the 'googleapi' support package.")
+	jsonFile      = flag.String("api_json_file", "", "If non-empty, the path to a local file on disk containing the API to generate. Exclusive with setting --api.")
+	output        = flag.String("output", "", "(optional) Path to source output file. If not specified, the API name and version are used to construct an output path (e.g. tasks/v1).")
+	googleAPIPkg  = flag.String("googleapi_pkg", "google.golang.org/api/googleapi", "Go package path of the 'googleapi' support package.")
+	headerAltJSON = flag.Bool("header_alt_json", true, "Whether to add \"alt=json\" in header")
 )
 
 // API represents an API to generate, as well as its state while it's
@@ -1268,7 +1269,9 @@ func (meth *Method) generateCode() {
 	pn("params := make(url.Values)")
 	// Set this first. if they override it, though, might be gross.  We don't expect
 	// XML replies elsewhere.  TODO(bradfitz): hide this option in the generated code?
-	pn(`params.Set("alt", "json")`)
+	if *headerAltJSON {
+		pn(`params.Set("alt", "json")`)
+	}
 	for _, p := range meth.RequiredQueryParams() {
 		pn("params.Set(%q, fmt.Sprintf(\"%%v\", c.%s))", p.name, p.goCallFieldName())
 	}
@@ -1677,7 +1680,7 @@ func validGoIdentifer(ident string) string {
 func depunct(ident string, needCap bool) string {
 	var buf bytes.Buffer
 	for _, c := range ident {
-		if c == '-' || c == '.' || c == '$' || c == '/' {
+		if c == '-' || c == '.' || c == '$' || c == '/' || c == '@' {
 			needCap = true
 			continue
 		}
